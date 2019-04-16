@@ -15,7 +15,7 @@ public Plugin myinfo =
 	url = "https://github.com/b3none"
 };
 
-public void Executes_OnPreRoundEnqueue(Handle rankingQueue, Handle waitingQueue)
+public void Executes_OnPreRoundEnqueue(ArrayList rankingQueue, ArrayList waitingQueue)
 {
 	int vip;
 	
@@ -31,29 +31,29 @@ public void Executes_OnPreRoundEnqueue(Handle rankingQueue, Handle waitingQueue)
 		vip = FindAdminInArray(waitingQueue);
 	}
 	
-	Handle array_players = CreateArray();
+	ArrayList array_players = new ArrayList();
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && GetClientTeam(i) > 1 && !CheckCommandAccess(i, "skip_queue", ADMFLAG_RESERVATION, false))
 		{
-			PushArrayCell(array_players, i);
+			array_players.Push(i);
 		}
 	}
 	
 	int luck, player;
-	while (count > 0 && GetArraySize(array_players) > 0)
+	while (count > 0 && array_players.Length > 0)
 	{
 		count--;
 		
-		luck = GetRandomInt(0, GetArraySize(array_players) - 1);
-		player = GetArrayCell(array_players, luck);
+		luck = GetRandomInt(0, array_players.Length - 1);
+		player = array_players.Get(luck);
 		
 		ChangeClientTeam(player, 1);
 		
 		PrintToChat(player, "%s You have been moved to spectator because a VIP has taken your spot.", MESSAGE_PREFIX);
 		
-		RemoveFromArray(array_players, luck);
+		array_players.Erase(luck);
 		
 		Queue_Enqueue(waitingQueue, player);
 	}
@@ -61,17 +61,17 @@ public void Executes_OnPreRoundEnqueue(Handle rankingQueue, Handle waitingQueue)
 	delete array_players;
 }
 
-int FindAdminInArray(Handle waitingQueue)
+int FindAdminInArray(ArrayList waitingQueue)
 {
-	if (GetArraySize(waitingQueue) != 0)
+	if (waitingQueue.Length != 0)
 	{
 		int client = 0;
 		int index = 0;
 		bool found = false;
 		
-		while (!found && index < GetArraySize(waitingQueue))
+		while (!found && index < waitingQueue.Length)
 		{
-			client = GetArrayCell(waitingQueue, index);
+			client = waitingQueue.Get(index);
 			
 			if (CheckCommandAccess(client, "skip_queue", ADMFLAG_RESERVATION, false))
 			{
@@ -89,24 +89,24 @@ int FindAdminInArray(Handle waitingQueue)
 	return -1;
 } 
 
-void PQ_Enqueue(Handle queueHandle, int client, int value)
+void PQ_Enqueue(ArrayList queueHandle, int client, int value)
 {
     int index = PQ_FindClient(queueHandle, client);
 
     if (index == -1) {
-        index = GetArraySize(queueHandle);
-        PushArrayCell(queueHandle, client);
-        SetArrayCell(queueHandle, index, client, 0);
+        index = queueHandle.Length;
+        queueHandle.Push(client);
+        queueHandle.Set(index, client, 0);
     }
 
-    SetArrayCell(queueHandle, index, value, 1);
+    queueHandle.Set(index, value, 1);
 }
 
-int PQ_FindClient(Handle queueHandle, int client)
+int PQ_FindClient(ArrayList queueHandle, int client)
 {
-    for (int i = 0; i < GetArraySize(queueHandle); i++)
+    for (int i = 0; i < queueHandle.Length; i++)
     {
-        int c = GetArrayCell(queueHandle, i, 0);
+        int c = queueHandle.Get(i, 0);
         
         if (client == c)
         {
@@ -116,25 +116,25 @@ int PQ_FindClient(Handle queueHandle, int client)
     return -1;
 }
 
-void Queue_Enqueue(Handle queueHandle, int client)
+void Queue_Enqueue(ArrayList queueHandle, int client)
 {
     if (Queue_Find(queueHandle, client) == -1)
     {
-        PushArrayCell(queueHandle, client);
+        queueHandle.Push(client);
     }
 }
 
-int Queue_Find(Handle queueHandle, int client)
+int Queue_Find(ArrayList queueHandle, int client)
 {
-    return FindValueInArray(queueHandle, client);
+    return queueHandle.FindValue(client);
 }
 
-void Queue_Drop(Handle queueHandle, int client)
+void Queue_Drop(ArrayList queueHandle, int client)
 {
     int index = Queue_Find(queueHandle, client);
     
     if (index != -1)
     {
-        RemoveFromArray(queueHandle, index);
+        queueHandle.Erase(index);
     }
 }
